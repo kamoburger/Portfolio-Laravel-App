@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateBlogRequest extends FormRequest
 {
@@ -11,7 +13,7 @@ class UpdateBlogRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +24,24 @@ class UpdateBlogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "title" => "required | max:100",
+            "content" => "required"
         ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'title.required' => 'タイトルは必須です',
+            'content.required' => '本文は必須です',
+        ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        $res = response()->json([
+            "errors" => $validator->errors(),
+        ], 400, ['Content-Type' => 'application/json;charset=UTF-8', 'Charset' => 'utf-8'], JSON_UNESCAPED_UNICODE);
+        throw new HttpResponseException($res);
     }
 }
